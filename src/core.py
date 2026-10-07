@@ -6,10 +6,15 @@ from errors import ShellError
 from line_parser import parse_line
 
 VFS_NAME = "default"
+COMMENT_MARK = "#"
 
 
 class Shell:
     """Оболочка: умеет выполнять команды."""
+
+    def __init__(self, vfs_path=None):
+        """vfs_path: путь к VFS из параметра --vfs (пока не загружается)."""
+        self.vfs_path = vfs_path
 
     def prompt(self):
         """Приглашение к вводу с именем VFS."""
@@ -41,3 +46,27 @@ class Shell:
                 self.execute(line)
             except ShellError as err:
                 print(err, file=sys.stderr)
+
+    def run_script(self, path):
+        """Выполнить стартовый скрипт, показывая и ввод, и вывод."""
+        try:
+            with open(path, encoding="utf-8") as handle:
+                lines = handle.read().splitlines()
+        except (OSError, UnicodeError) as err:
+            raise ShellError(f"не удалось прочитать скрипт {path}") from err
+        for number, line in enumerate(lines, start=1):
+            self._run_script_line(path, number, line)
+
+    def _run_script_line(self, path, number, line):
+        """Выполнить одну строку скрипта; ошибочную пропустить."""
+        text = line.strip()
+        if not text:
+            return
+        if text.startswith(COMMENT_MARK):
+            print(text)
+            return
+        print(self.prompt() + text)
+        try:
+            self.execute(text)
+        except ShellError as err:
+            print(f"{path}:{number}: {err}", file=sys.stderr)
