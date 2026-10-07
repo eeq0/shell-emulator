@@ -1,0 +1,35 @@
+# Этап 5: mv, rmdir (запускать с deep.zip)
+# mv: в каталог, с переименованием, каталог целиком
+mv readme.txt docs
+ls docs
+mv docs/readme.txt first.txt
+ls
+mv docs/work/todo.txt docs/work/done.txt
+ls docs/work
+mv docs/work/reports docs/empty
+ls docs/empty
+ls docs/work
+# mv: ошибки
+mv nothing docs
+mv docs docs/empty
+mv first.txt
+mv docs/empty/reports/2026 first.txt
+# rmdir: ошибки (каталоги не пусты, не каталог, нет такого)
+rmdir docs/empty
+rmdir docs/empty/reports/2026
+rmdir first.txt
+rmdir nothing
+rmdir
+rmdir /
+# rmdir: успех (сначала освобождаем каталоги)
+mv docs/empty/reports/2026/q3.txt first.txt
+rmdir docs/empty/reports/2026
+rmdir docs/empty/reports
+rmdir docs/empty
+ls docs
+# если удалить или переместить текущий каталог, мы вернёмся в корень
+cd docs/work
+mv done.txt /
+rmdir /docs/work
+ls
+exit

@@ -97,6 +97,60 @@ class VFS:
             raise VFSError(f"{path}: не каталог")
         self.cwd = self.resolve(path)
 
+    def remove_dir(self, path):
+        """Удалить пустой каталог."""
+        parts = self.resolve(path)
+        node = self.lookup(path)
+        if not isinstance(node, Dir):
+            raise VFSError(f"{path}: не каталог")
+        if not parts:
+            raise VFSError("нельзя удалить корневой каталог")
+        if node.children:
+            raise VFSError(f"{path}: каталог не пуст")
+        del self.find(parts[:-1]).children[parts[-1]]
+        self._fix_cwd()
+
+    def move(self, src, dst):
+        """Переместить или переименовать файл либо каталог."""
+        src_parts = self.resolve(src)
+        node = self.lookup(src)
+        if not src_parts:
+            raise VFSError("нельзя переместить корневой каталог")
+        dst_parts = self.resolve(dst)
+        if dst_parts[:len(src_parts)] == src_parts:
+            raise VFSError(f"нельзя переместить '{src}' в самого себя")
+        target = self.find(dst_parts)
+        if isinstance(target, Dir):
+            parent, name = target, src_parts[-1]
+        else:
+            parent, name = self._parent_of(dst_parts, dst), dst_parts[-1]
+        _check_overwrite(node, parent.children.get(name), dst)
+        del self.find(src_parts[:-1]).children[src_parts[-1]]
+        parent.children[name] = node
+        self._fix_cwd()
+
+    def _parent_of(self, parts, path):
+        """Каталог, в котором должен лежать новый элемент."""
+        parent = self.find(parts[:-1])
+        if not isinstance(parent, Dir):
+            raise VFSError(f"{path}: нет такого файла или каталога")
+        return parent
+
+    def _fix_cwd(self):
+        """Если текущий каталог пропал, вернуться в корень."""
+        if not isinstance(self.find(self.cwd), Dir):
+            self.cwd = []
+
+
+def _check_overwrite(node, existing, dst):
+    """Проверить, можно ли положить node на место existing."""
+    if existing is None or existing is node:
+        return
+    if isinstance(existing, Dir):
+        raise VFSError(f"{dst}: каталог уже существует")
+    if isinstance(node, Dir):
+        raise VFSError(f"{dst}: нельзя заменить файл каталогом")
+
 
 def _build_dir(tree):
     """Построить каталог из вложенных словарей (текст -> файл)."""

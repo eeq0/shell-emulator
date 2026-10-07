@@ -72,6 +72,32 @@ class OperationsTest(unittest.TestCase):
         with self.assertRaises(VFSError):
             self.vfs.change_dir("etc/hostname")
 
+    def test_move_into_dir_and_rename(self):
+        """mv в каталог и mv с переименованием."""
+        self.vfs.move("etc/hostname", "tmp")
+        self.assertIsNotNone(self.vfs.find(["tmp", "hostname"]))
+        self.vfs.move("tmp/hostname", "tmp/name")
+        self.assertIsNotNone(self.vfs.find(["tmp", "name"]))
+        self.assertIsNone(self.vfs.find(["tmp", "hostname"]))
+
+    def test_move_dir_into_itself(self):
+        """Каталог нельзя переместить в самого себя."""
+        with self.assertRaises(VFSError):
+            self.vfs.move("home", "home/user")
+
+    def test_rmdir_rules(self):
+        """Удаляется только пустой каталог."""
+        with self.assertRaises(VFSError):
+            self.vfs.remove_dir("home")
+        self.vfs.remove_dir("tmp")
+        self.assertIsNone(self.vfs.find(["tmp"]))
+
+    def test_cwd_reset_after_rmdir(self):
+        """Если текущий каталог удалён, cwd возвращается в корень."""
+        self.vfs.change_dir("tmp")
+        self.vfs.remove_dir("/tmp")
+        self.assertEqual(self.vfs.cwd_path(), "/")
+
 
 class SaveZipTest(unittest.TestCase):
     """Запись VFS в ZIP-архив."""

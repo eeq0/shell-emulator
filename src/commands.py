@@ -10,6 +10,7 @@ ROOT_PATH = "/"
 SEPARATOR = "/"
 LS_MAX_ARGS = 1
 CD_MAX_ARGS = 1
+MV_ARG_COUNT = 2
 CAL_ARG_COUNT = 2
 MIN_MONTH = 1
 MAX_MONTH = 12
@@ -76,6 +77,21 @@ def cmd_date(shell, args):
     print(datetime.now().astimezone().strftime(DATE_FORMAT))
 
 
+def cmd_mv(shell, args):
+    """mv источник назначение: переместить или переименовать."""
+    if len(args) != MV_ARG_COUNT:
+        raise ShellError("mv: нужно два аргумента: источник и назначение")
+    shell.vfs.move(args[0], args[1])
+
+
+def cmd_rmdir(shell, args):
+    """rmdir каталог...: удалить пустые каталоги."""
+    if not args:
+        raise ShellError("rmdir: не указан каталог")
+    for path in args:
+        shell.vfs.remove_dir(path)
+
+
 def cmd_vfs_init(shell, args):
     """vfs-init: заменить VFS на VFS по умолчанию.
 
@@ -105,6 +121,8 @@ COMMANDS = {
     "cd": cmd_cd,
     "cal": cmd_cal,
     "date": cmd_date,
+    "mv": cmd_mv,
+    "rmdir": cmd_rmdir,
     "vfs-init": cmd_vfs_init,
     "exit": cmd_exit,
 }

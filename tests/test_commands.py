@@ -73,10 +73,24 @@ class CommandsTest(unittest.TestCase):
         self.assertEqual(self.shell.vfs.name, "default")
         self.assertIsNone(self.shell.vfs_path)
 
+    def test_mv_rmdir_only_in_memory(self):
+        """mv и rmdir меняют VFS в памяти, а ZIP на диске остаётся прежним."""
+        with tempfile.TemporaryDirectory() as folder:
+            path = os.path.join(folder, "disk.zip")
+            helpers.make_zip(path, {"a.txt": b"a", "empty/": b""})
+            with open(path, "rb") as handle:
+                before = handle.read()
+            self.shell = Shell(load_zip(path), path)
+            self.run_line("mv a.txt b.txt")
+            self.run_line("rmdir empty")
+            self.assertEqual(self.run_line("ls"), "b.txt\n")
+            with open(path, "rb") as handle:
+                self.assertEqual(handle.read(), before)
+
     def test_errors(self):
         """Неизвестная команда и неверные аргументы."""
         for line in ["foo", "cd a b", "ls a b", "cal 13 2024",
-                     "cal 2026", "date x", "exit 1"]:
+                     "cal 2026", "date x", "mv a", "rmdir", "exit 1"]:
             with self.assertRaises(ShellError, msg=line):
                 self.run_line(line)
 

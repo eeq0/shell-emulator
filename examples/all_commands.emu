@@ -1,0 +1,15 @@
+# Все команды: запускать с deep.zip и переменной EMU_DIR=docs
+ls
+cd $EMU_DIR
+ls
+cal 2 2024
+date
+mv notes.txt notes2.txt
+ls
+rmdir empty
+ls
+cd /
+vfs-init
+ls
+unknown
+exit
