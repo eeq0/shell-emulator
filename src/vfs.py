@@ -20,7 +20,6 @@ DEFAULT_TREE = {
 class File:
     """Файл. Данные хранятся в base64, поэтому подходят и бинарные."""
 
-    mark = "-"
     suffix = ""
 
     def __init__(self, data_b64):
@@ -40,16 +39,11 @@ class File:
 class Dir:
     """Каталог: словарь «имя -> файл или каталог»."""
 
-    mark = "d"
     suffix = SEPARATOR
 
     def __init__(self):
         """Создать пустой каталог."""
         self.children = {}
-
-    def size(self):
-        """У каталога размер всегда 0."""
-        return 0
 
 
 class VFS:
@@ -64,6 +58,44 @@ class VFS:
     def cwd_path(self):
         """Текущий каталог в виде строки, например '/docs/work'."""
         return SEPARATOR + SEPARATOR.join(self.cwd)
+
+    def resolve(self, path):
+        """Превратить путь в список имён от корня, учитывая '.' и '..'."""
+        parts = [] if path.startswith(SEPARATOR) else list(self.cwd)
+        for part in path.split(SEPARATOR):
+            if part in ("", CURRENT):
+                continue
+            if part == PARENT:
+                if parts:
+                    parts.pop()
+            else:
+                parts.append(part)
+        return parts
+
+    def find(self, parts):
+        """Найти узел по списку имён. Если его нет, вернуть None."""
+        node = self.root
+        for part in parts:
+            if not isinstance(node, Dir):
+                return None
+            node = node.children.get(part)
+            if node is None:
+                return None
+        return node
+
+    def lookup(self, path):
+        """Найти узел по пути или сообщить, что его нет."""
+        node = self.find(self.resolve(path))
+        if node is None:
+            raise VFSError(f"{path}: нет такого файла или каталога")
+        return node
+
+    def change_dir(self, path):
+        """Сделать каталог по пути текущим."""
+        node = self.lookup(path)
+        if not isinstance(node, Dir):
+            raise VFSError(f"{path}: не каталог")
+        self.cwd = self.resolve(path)
 
 
 def _build_dir(tree):

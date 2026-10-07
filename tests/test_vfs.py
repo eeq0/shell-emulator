@@ -1,4 +1,4 @@
-"""Тесты загрузки VFS из ZIP."""
+"""Тесты виртуальной файловой системы."""
 import os
 import tempfile
 import unittest
@@ -31,15 +31,13 @@ class LoadZipTest(unittest.TestCase):
     def test_structure_and_name(self):
         """Дерево собрано, имя VFS взято из имени файла."""
         vfs = load_zip(self.path)
-        docs = vfs.root.children["docs"]
         self.assertEqual(vfs.name, "sample")
-        self.assertIsInstance(docs.children["work"], Dir)
-        self.assertIsInstance(docs.children["empty"], Dir)
+        self.assertIsInstance(vfs.lookup("docs/work"), Dir)
+        self.assertIsInstance(vfs.lookup("docs/empty"), Dir)
 
     def test_binary_size(self):
         """Бинарные данные хранятся без потерь (через base64)."""
-        vfs = load_zip(self.path)
-        self.assertEqual(vfs.root.children["bin.dat"].size(), 3)
+        self.assertEqual(load_zip(self.path).lookup("bin.dat").size(), 3)
 
     def test_missing_file(self):
         """Нет файла: ошибка загрузки."""
@@ -53,6 +51,26 @@ class LoadZipTest(unittest.TestCase):
             handle.write("not a zip")
         with self.assertRaises(VFSError):
             load_zip(bad)
+
+
+class OperationsTest(unittest.TestCase):
+    """cd, mv, rmdir на VFS по умолчанию."""
+
+    def setUp(self):
+        """Взять свежую VFS по умолчанию."""
+        self.vfs = default_vfs()
+
+    def test_change_dir_and_parent(self):
+        """cd и '..' работают."""
+        self.vfs.change_dir("home/user")
+        self.assertEqual(self.vfs.cwd_path(), "/home/user")
+        self.vfs.change_dir("../..")
+        self.assertEqual(self.vfs.cwd_path(), "/")
+
+    def test_cd_to_file_fails(self):
+        """В файл перейти нельзя."""
+        with self.assertRaises(VFSError):
+            self.vfs.change_dir("etc/hostname")
 
 
 class SaveZipTest(unittest.TestCase):

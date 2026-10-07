@@ -1,0 +1,35 @@
+# Этап 4: ls, cd, cal, date (deep.zip, переменная EMU_DIR=docs)
+# ls: текущий каталог, путь к каталогу, путь к файлу, '..'
+ls
+ls docs
+ls docs/work
+ls docs/notes.txt
+ls docs/work/..
+# ls: ошибки
+ls nothing
+ls docs bin
+# cd: относительные и абсолютные пути, '..', переменная, без аргумента
+cd docs
+cd work/reports
+ls
+cd ../..
+cd /bin
+cd ..
+cd $EMU_DIR
+cd
+# cd: ошибки
+cd readme.txt
+cd nothing
+cd a b
+# cal: текущий месяц и заданный месяц
+cal
+cal 2 2024
+# cal: ошибки
+cal 13 2024
+cal abc 2024
+cal 2026
+# date: текущие дата и время
+date
+# date: ошибка
+date now
+exit

@@ -1,8 +1,8 @@
 # Этап 2: стартовый скрипт с ошибочными строками (они пропускаются)
-ls /tmp
+ls
 foo bar
 cd a b
+ls -x
 cd $HOME
-exit 1
-ls $HOME
+ls
 exit

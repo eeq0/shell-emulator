@@ -1,7 +1,8 @@
-"""Тесты команд оболочки (этап 3)."""
+"""Тесты команд оболочки."""
 import os
 import tempfile
 import unittest
+from datetime import date
 
 import helpers
 from core import Shell
@@ -24,10 +25,34 @@ class CommandsTest(unittest.TestCase):
         """В приглашении есть имя VFS."""
         self.assertEqual(self.shell.prompt(), "default:/$ ")
 
-    def test_stubs(self):
-        """ls и cd пока заглушки."""
-        self.assertEqual(self.run_line("ls /tmp"), "ls /tmp\n")
-        self.assertEqual(self.run_line("cd docs"), "cd docs\n")
+    def test_ls(self):
+        """ls показывает каталоги со слешем."""
+        self.assertEqual(self.run_line("ls").strip(), "etc/  home/  tmp/")
+
+    def test_ls_path_and_file(self):
+        """ls с путём к каталогу и к файлу."""
+        self.assertEqual(self.run_line("ls home"), "user/\n")
+        self.assertEqual(self.run_line("ls etc/hostname"), "hostname\n")
+
+    def test_cd_changes_prompt(self):
+        """После cd меняется приглашение."""
+        self.run_line("cd home/user")
+        self.assertEqual(self.shell.prompt(), "default:/home/user$ ")
+        self.run_line("cd ..")
+        self.assertEqual(self.shell.prompt(), "default:/home$ ")
+
+    def test_cal_month_year(self):
+        """cal с месяцем и годом."""
+        self.assertIn("February 2024", self.run_line("cal 2 2024"))
+
+    def test_cal_current_month(self):
+        """cal без аргументов показывает текущий месяц."""
+        today = date.today()
+        self.assertIn(str(today.year), self.run_line("cal"))
+
+    def test_date(self):
+        """date печатает текущий год."""
+        self.assertIn(str(date.today().year), self.run_line("date"))
 
     def test_vfs_init_resets(self):
         """vfs-init возвращает VFS по умолчанию и очищает ZIP на диске."""
@@ -50,7 +75,8 @@ class CommandsTest(unittest.TestCase):
 
     def test_errors(self):
         """Неизвестная команда и неверные аргументы."""
-        for line in ["foo", "cd a b", "vfs-init x", "exit 1"]:
+        for line in ["foo", "cd a b", "ls a b", "cal 13 2024",
+                     "cal 2026", "date x", "exit 1"]:
             with self.assertRaises(ShellError, msg=line):
                 self.run_line(line)
 

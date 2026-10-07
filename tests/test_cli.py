@@ -70,6 +70,7 @@ class CliTest(unittest.TestCase):
         script = self.write("s.emu", "ls\nexit\n")
         _, out, _ = run_main(["--vfs", archive, "--script", script])
         self.assertIn("mini:/$ ls", out)
+        self.assertIn("hello.txt", out)
 
 
 if __name__ == "__main__":
