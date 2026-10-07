@@ -4,6 +4,7 @@ import sys
 
 from core import Shell
 from errors import ShellError
+from vfs import default_vfs, load_zip
 
 EXIT_ERROR = 1
 
@@ -12,7 +13,7 @@ def build_arg_parser():
     """Описать параметры командной строки."""
     parser = argparse.ArgumentParser(description="Эмулятор оболочки UNIX")
     parser.add_argument("--vfs", metavar="PATH",
-                        help="путь к VFS (пока только запоминается)")
+                        help="путь к ZIP-архиву с VFS")
     parser.add_argument("--script", metavar="PATH",
                         help="путь к стартовому скрипту")
     return parser
@@ -26,8 +27,9 @@ def print_debug(args):
 
 
 def start(args):
-    """Выполнить скрипт (если задан) и запустить REPL."""
-    shell = Shell(args.vfs)
+    """Загрузить VFS, выполнить скрипт и запустить REPL."""
+    vfs = load_zip(args.vfs) if args.vfs else default_vfs()
+    shell = Shell(vfs, args.vfs)
     if args.script:
         shell.run_script(args.script)
     shell.repl()

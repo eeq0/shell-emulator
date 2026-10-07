@@ -46,7 +46,7 @@ class CliTest(unittest.TestCase):
         script = self.write("s.emu", "ls\nfoo\nls tmp\nexit\n")
         code, out, err = run_main(["--script", script])
         self.assertEqual(code, 0)
-        self.assertIn("default$ ls", out)
+        self.assertIn("default:/$ ls", out)
         self.assertIn("foo: команда не найдена", err)
         self.assertIn(":2:", err)
 
@@ -55,6 +55,21 @@ class CliTest(unittest.TestCase):
         code, _, err = run_main(["--script", "/no/such/script.emu"])
         self.assertEqual(code, 1)
         self.assertIn("не удалось прочитать скрипт", err)
+
+    def test_bad_vfs(self):
+        """Неверная VFS: ошибка и код 1."""
+        bad = self.write("bad.zip", "not a zip")
+        code, _, err = run_main(["--vfs", bad])
+        self.assertEqual(code, 1)
+        self.assertIn("неверный формат", err)
+
+    def test_vfs_from_zip(self):
+        """VFS из ZIP попадает в приглашение."""
+        archive = os.path.join(self.folder.name, "mini.zip")
+        helpers.make_zip(archive, {"hello.txt": b"hi"})
+        script = self.write("s.emu", "ls\nexit\n")
+        _, out, _ = run_main(["--vfs", archive, "--script", script])
+        self.assertIn("mini:/$ ls", out)
 
 
 if __name__ == "__main__":

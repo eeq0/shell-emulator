@@ -1,24 +1,24 @@
-"""Ядро эмулятора: выполнение команд и интерактивный цикл (REPL)."""
+"""Ядро эмулятора: выполнение команд, REPL и стартовые скрипты."""
 import sys
 
 from commands import COMMANDS
-from errors import ShellError
+from errors import ShellError, VFSError
 from line_parser import parse_line
 
-VFS_NAME = "default"
 COMMENT_MARK = "#"
 
 
 class Shell:
-    """Оболочка: умеет выполнять команды."""
+    """Оболочка: хранит текущую VFS и умеет выполнять команды."""
 
-    def __init__(self, vfs_path=None):
-        """vfs_path: путь к VFS из параметра --vfs (пока не загружается)."""
+    def __init__(self, vfs, vfs_path=None):
+        """vfs: текущая VFS; vfs_path: путь к её ZIP-файлу или None."""
+        self.vfs = vfs
         self.vfs_path = vfs_path
 
     def prompt(self):
-        """Приглашение к вводу с именем VFS."""
-        return f"{VFS_NAME}$ "
+        """Приглашение к вводу: имя VFS и текущий каталог."""
+        return f"{self.vfs.name}:{self.vfs.cwd_path()}$ "
 
     def execute(self, line):
         """Выполнить одну строку. Ошибки приходят как ShellError."""
@@ -29,7 +29,10 @@ class Shell:
         handler = COMMANDS.get(name)
         if handler is None:
             raise ShellError(f"{name}: команда не найдена")
-        handler(self, args)
+        try:
+            handler(self, args)
+        except VFSError as err:
+            raise ShellError(f"{name}: {err}") from err
 
     def repl(self):
         """Интерактивный цикл: прочитать строку, выполнить, повторить."""

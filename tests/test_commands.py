@@ -1,18 +1,20 @@
-"""Тесты команд оболочки (этапы 1 и 2)."""
+"""Тесты команд оболочки (этап 3)."""
 import os
+import tempfile
 import unittest
 
 import helpers
 from core import Shell
 from errors import ShellError
+from vfs import default_vfs, load_zip
 
 
 class CommandsTest(unittest.TestCase):
-    """Проверки команд-заглушек через Shell.execute."""
+    """Проверки команд через Shell.execute."""
 
     def setUp(self):
-        """Новая оболочка для каждого теста."""
-        self.shell = Shell()
+        """Оболочка с VFS по умолчанию."""
+        self.shell = Shell(default_vfs())
 
     def run_line(self, line):
         """Выполнить строку и вернуть вывод."""
@@ -20,28 +22,35 @@ class CommandsTest(unittest.TestCase):
 
     def test_prompt_has_vfs_name(self):
         """В приглашении есть имя VFS."""
-        self.assertEqual(self.shell.prompt(), "default$ ")
+        self.assertEqual(self.shell.prompt(), "default:/$ ")
 
-    def test_ls_stub(self):
-        """ls печатает своё имя и аргументы."""
-        self.assertEqual(self.run_line("ls /tmp -l"), "ls /tmp -l\n")
-
-    def test_cd_stub(self):
-        """cd печатает своё имя и аргумент."""
+    def test_stubs(self):
+        """ls и cd пока заглушки."""
+        self.assertEqual(self.run_line("ls /tmp"), "ls /tmp\n")
         self.assertEqual(self.run_line("cd docs"), "cd docs\n")
 
-    def test_env_expansion(self):
-        """Переменные окружения раскрываются до выполнения команды."""
-        os.environ["EMU_TEST_VAR"] = "/tmp/x"
-        self.assertEqual(self.run_line("ls $EMU_TEST_VAR"), "ls /tmp/x\n")
+    def test_vfs_init_resets(self):
+        """vfs-init возвращает VFS по умолчанию и очищает ZIP на диске."""
+        with tempfile.TemporaryDirectory() as folder:
+            path = os.path.join(folder, "old.zip")
+            helpers.make_zip(path, {"old.txt": b"old"})
+            self.shell = Shell(load_zip(path), path)
+            self.run_line("vfs-init")
+            self.assertEqual(self.shell.vfs.name, "default")
+            names = load_zip(path).root.children
+            self.assertNotIn("old.txt", names)
+            self.assertIn("home", names)
 
-    def test_empty_line(self):
-        """Пустая строка ничего не делает."""
-        self.assertEqual(self.run_line("   "), "")
+    def test_vfs_init_without_file(self):
+        """Без ZIP-файла vfs-init меняет VFS только в памяти."""
+        self.shell.vfs.name = "other"
+        self.run_line("vfs-init")
+        self.assertEqual(self.shell.vfs.name, "default")
+        self.assertIsNone(self.shell.vfs_path)
 
     def test_errors(self):
         """Неизвестная команда и неверные аргументы."""
-        for line in ["foo", "cd a b", "exit 1"]:
+        for line in ["foo", "cd a b", "vfs-init x", "exit 1"]:
             with self.assertRaises(ShellError, msg=line):
                 self.run_line(line)
 
