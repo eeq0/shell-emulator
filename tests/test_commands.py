@@ -13,8 +13,13 @@ from vfs import default_vfs, load_zip
 class CommandsTest(unittest.TestCase):
     """Проверки команд через Shell.execute."""
 
-    def setUp(self):
-        """Оболочка с VFS по умолчанию."""
+    def __init__(self, method_name="runTest"):
+        """Оболочка с VFS по умолчанию.
+
+        unittest создаёт отдельный объект для каждого теста,
+        поэтому у каждого теста свои данные.
+        """
+        super().__init__(method_name)
         self.shell = Shell(default_vfs())
 
     def run_line(self, line):

@@ -20,13 +20,15 @@ def run_main(argv):
 class CliTest(unittest.TestCase):
     """Проверки параметров --vfs и --script."""
 
-    def setUp(self):
-        """Временная папка для скриптов."""
-        self.folder = tempfile.TemporaryDirectory()
+    def __init__(self, method_name="runTest"):
+        """Временная папка для скриптов, удаляется после теста.
 
-    def tearDown(self):
-        """Удалить временную папку."""
-        self.folder.cleanup()
+        unittest создаёт отдельный объект для каждого теста,
+        поэтому у каждого теста свои данные.
+        """
+        super().__init__(method_name)
+        self.folder = tempfile.TemporaryDirectory()
+        self.addCleanup(self.folder.cleanup)
 
     def write(self, name, text):
         """Записать файл во временную папку и вернуть путь."""

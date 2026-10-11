@@ -3,12 +3,18 @@ import os
 import unittest
 
 import helpers
+import line_parser
 from errors import ShellError
 from line_parser import parse_line
 
 
 class ParseLineTest(unittest.TestCase):
     """Проверки parse_line."""
+
+    def test_code_from_src(self):
+        """Тесты проверяют именно код из папки src."""
+        module_dir = os.path.dirname(os.path.abspath(line_parser.__file__))
+        self.assertEqual(module_dir, os.path.abspath(helpers.SRC_DIR))
 
     def test_words(self):
         """Строка делится на слова."""

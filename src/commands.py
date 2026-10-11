@@ -47,7 +47,7 @@ def cmd_cd(shell, args):
 def _month_and_year(args):
     """Прочитать месяц и год из аргументов cal и проверить их."""
     if len(args) != CAL_ARG_COUNT:
-        raise ShellError("cal: нужно указать месяц и год, например: cal 2 2024")
+        raise ShellError("cal: укажите месяц и год, например: cal 2 2024")
     try:
         month, year = int(args[0]), int(args[1])
     except ValueError as err:

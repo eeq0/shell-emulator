@@ -18,15 +18,17 @@ FILES = {
 class LoadZipTest(unittest.TestCase):
     """Загрузка VFS из ZIP."""
 
-    def setUp(self):
-        """Создать временный архив."""
+    def __init__(self, method_name="runTest"):
+        """Временный архив, папка удаляется после теста.
+
+        unittest создаёт отдельный объект для каждого теста,
+        поэтому у каждого теста свои данные.
+        """
+        super().__init__(method_name)
         self.folder = tempfile.TemporaryDirectory()
+        self.addCleanup(self.folder.cleanup)
         self.path = os.path.join(self.folder.name, "sample.zip")
         helpers.make_zip(self.path, FILES)
-
-    def tearDown(self):
-        """Удалить временную папку."""
-        self.folder.cleanup()
 
     def test_structure_and_name(self):
         """Дерево собрано, имя VFS взято из имени файла."""
@@ -56,8 +58,13 @@ class LoadZipTest(unittest.TestCase):
 class OperationsTest(unittest.TestCase):
     """cd, mv, rmdir на VFS по умолчанию."""
 
-    def setUp(self):
-        """Взять свежую VFS по умолчанию."""
+    def __init__(self, method_name="runTest"):
+        """Свежая VFS по умолчанию.
+
+        unittest создаёт отдельный объект для каждого теста,
+        поэтому у каждого теста свои данные.
+        """
+        super().__init__(method_name)
         self.vfs = default_vfs()
 
     def test_change_dir_and_parent(self):
